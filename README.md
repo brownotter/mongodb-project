@@ -39,7 +39,7 @@ Upiti za menadžera luke (Anđela):
 Upiti za analitičara pomorskog saobraćaja (Mirjana): <br><br>
 
 Detalji implementacija upita pre optimizacije su dostupni u folderu:[queries](./v1/queries). <br>
-Detalji implementacija upita pre optimizacije su dostupni u folderu:[queries](./v2).
+Detalji implementacija upita prosle optimizacije su dostupni u folderu:[queries](./v2).
 
 #### Performanse
 
