@@ -1,0 +1,332 @@
+1. Koji tipovi brodova imaju najduže procenjeno vreme dolaska (ETA)? 
+
+db.positions.aggregate([
+  { $match: { "destination.ETA_hours": { $gt: 0, $lt: 72 } } },
+  {
+    $lookup: {
+      from: "vessels",
+      localField: "MMSI",
+      foreignField: "_id",
+      as: "vessel"
+    }
+  },
+  { $unwind: "$vessel" },
+  {
+    $lookup: {
+      from: "vessel_types",
+      localField: "vessel.VesselType",
+      foreignField: "_id",
+      as: "type_info"
+    }
+  },
+  { $unwind: { path: "$type_info", preserveNullAndEmptyArrays: true } },
+  {
+    $group: {
+      _id: "$vessel.VesselType",
+      type_name: { $first: "$type_info.name" },
+      category: { $first: "$type_info.category" },
+      avg_eta_hours: { $avg: "$destination.ETA_hours" },
+      min_eta_hours: { $min: "$destination.ETA_hours" },
+      max_eta_hours: { $max: "$destination.ETA_hours" },
+      total_vessels: { $sum: 1 }
+    }
+  },
+  { $sort: { avg_eta_hours: -1 } },
+  { $limit: 10 }
+]).toArray()
+
+2. Koji brodovi su zaustavljeni i u blizini kojih luka?
+
+db.positions.aggregate([
+  { $match: { "kinematics.Speed_Category": "Stopped" } },
+  {
+    $lookup: {
+      from: "vessels",
+      localField: "MMSI",
+      foreignField: "_id",
+      as: "vessel"
+    }
+  },
+  { $unwind: "$vessel" },
+  {
+    $lookup: {
+      from: "vessel_types",
+      localField: "vessel.VesselType",
+      foreignField: "_id",
+      as: "type_info"
+    }
+  },
+  { $unwind: { path: "$type_info", preserveNullAndEmptyArrays: true } },
+  {
+    $group: {
+      _id: "$MMSI",
+      vessel_name: { $first: "$vessel.VesselName" },
+      vessel_type: { $first: "$type_info.name" },
+      stopped_count: { $sum: 1 },
+      lat: { $first: { $arrayElemAt: ["$position.coordinates", 1] } },
+      lon: { $first: { $arrayElemAt: ["$position.coordinates", 0] } }
+    }
+  },
+  { $sort: { stopped_count: -1 } },
+  { $limit: 20 },
+  {
+    $lookup: {
+      from: "ports",
+      let: { lat: "$lat", lon: "$lon" },
+      pipeline: [
+        {
+          $geoNear: {
+            near: { type: "Point", coordinates: ["$$lon", "$$lat"] },
+            distanceField: "distance_m",
+            maxDistance: 80000,
+            spherical: true
+          }
+        },
+        { $limit: 1 },
+        { $project: { name: 1, country: 1, distance_m: 1 } }
+      ],
+      as: "nearest_port"
+    }
+  },
+  { $unwind: { path: "$nearest_port", preserveNullAndEmptyArrays: true } },
+  {
+    $project: {
+      vessel_name: 1,
+      vessel_type: 1,
+      stopped_count: 1,
+      nearest_port: "$nearest_port.name",
+      country: "$nearest_port.country",
+      distance_to_port_km: { $round: [{ $divide: ["$nearest_port.distance_m", 1000] }, 2] }
+    }
+  }
+]).toArray()
+
+
+3. Koji tipovi tereta dominiraju na destinacijama i koji je prosečan gaz?
+
+db.positions.aggregate([
+  { $match: { "destination.cluster_id": { $exists: true } } },
+  {
+    $lookup: {
+      from: "vessels",
+      localField: "MMSI",
+      foreignField: "_id",
+      as: "vessel"
+    }
+  },
+  { $unwind: "$vessel" },
+  {
+    $group: {
+      _id: {
+        cluster: "$destination.cluster_id",
+        cargo: "$Cargo"
+      },
+      avg_draft: { $avg: "$vessel.dimensions.Draft" },
+      avg_eta: { $avg: "$destination.ETA_hours" },
+      count: { $sum: 1 },
+      dest_lat: { $first: "$destination.dest_lat" },
+      dest_lon: { $first: "$destination.dest_lon" }
+    }
+  },
+  {
+    $lookup: {
+      from: "ports",
+      let: { lat: "$dest_lat", lon: "$dest_lon" },
+      pipeline: [
+        {
+          $geoNear: {
+            near: { type: "Point", coordinates: ["$$lon", "$$lat"] },
+            distanceField: "distance",
+            maxDistance: 100000,
+            spherical: true
+          }
+        },
+        { $limit: 1 },
+        { $project: { name: 1, country: 1 } }
+      ],
+      as: "nearest_port"
+    }
+  },
+  { $unwind: { path: "$nearest_port", preserveNullAndEmptyArrays: true } },
+  {
+    $project: {
+      cluster_id: "$_id.cluster",
+      cargo_code: "$_id.cargo",
+      port_name: "$nearest_port.name",
+      country: "$nearest_port.country",
+      avg_draft: { $round: ["$avg_draft", 2] },
+      avg_eta_hours: { $round: ["$avg_eta", 2] },
+      vessel_count: "$count"
+    }
+  },
+  { $sort: { vessel_count: -1 } },
+  { $limit: 15 }
+]).toArray()
+
+
+4. Za svaku luku, koji tipovi brodova najčešće pristaju i koliki je njihov prosečan gaz u odnosu na dubinu kanala luke?
+
+db.positions.aggregate([
+  { $match: { "destination.dist_km": { $gt: 0 } } },
+  {
+    $lookup: {
+      from: "vessels",
+      localField: "MMSI",
+      foreignField: "_id",
+      as: "vessel"
+    }
+  },
+  { $unwind: "$vessel" },
+  {
+    $lookup: {
+      from: "vessel_types",
+      localField: "vessel.VesselType",
+      foreignField: "_id",
+      as: "type_info"
+    }
+  },
+  { $unwind: { path: "$type_info", preserveNullAndEmptyArrays: true } },
+  {
+    $group: {
+      _id: {
+        cluster: "$destination.cluster_id",
+        vessel_type: "$type_info.name",
+        category: "$type_info.category"
+      },
+      vessel_count: { $sum: 1 },
+      avg_draft: { $avg: "$vessel.dimensions.Draft" },
+      avg_length: { $avg: "$vessel.dimensions.Length" },
+      dest_lat: { $first: "$destination.dest_lat" },
+      dest_lon: { $first: "$destination.dest_lon" }
+    }
+  },
+  {
+    $lookup: {
+      from: "ports",
+      let: { lat: "$dest_lat", lon: "$dest_lon" },
+      pipeline: [
+        {
+          $geoNear: {
+            near: { type: "Point", coordinates: ["$$lon", "$$lat"] },
+            distanceField: "distance",
+            maxDistance: 100000,
+            spherical: true
+          }
+        },
+        { $limit: 1 },
+        { $project: { name: 1, country: 1, "depths.channel_m": 1, "max_vessel.draft_m": 1 } }
+      ],
+      as: "nearest_port"
+    }
+  },
+  { $unwind: { path: "$nearest_port", preserveNullAndEmptyArrays: true } },
+  {
+    $addFields: {
+      draft_clearance: {
+        $subtract: ["$nearest_port.depths.channel_m", "$avg_draft"]
+      },
+      can_enter_port: {
+        $cond: {
+          if: { $gte: ["$nearest_port.depths.channel_m", "$avg_draft"] },
+          then: "Da",
+          else: "Ne - preduboki gaz"
+        }
+      }
+    }
+  },
+  {
+    $project: {
+      port_name: "$nearest_port.name",
+      country: "$nearest_port.country",
+      vessel_type: "$_id.vessel_type",
+      category: "$_id.category",
+      vessel_count: 1,
+      avg_draft: { $round: ["$avg_draft", 2] },
+      channel_depth: "$nearest_port.depths.channel_m",
+      draft_clearance: { $round: ["$draft_clearance", 2] },
+      can_enter_port: 1
+    }
+  },
+  { $sort: { vessel_count: -1 } },
+  { $limit: 20 }
+]).toArray()
+
+
+5. Koliki je prosečan broj brodova po tipu koji su istovremeno na putu ka istoj luci?
+
+db.positions.aggregate([
+  {
+    $match: {
+      "destination.ETA_hours": { $gt: 0, $lt: 72 },
+      "kinematics.Speed_Category": { $ne: "Stopped" }
+    }
+  },
+  {
+    $lookup: {
+      from: "vessels",
+      localField: "MMSI",
+      foreignField: "_id",
+      as: "vessel"
+    }
+  },
+  { $unwind: "$vessel" },
+  {
+    $lookup: {
+      from: "vessel_types",
+      localField: "vessel.VesselType",
+      foreignField: "_id",
+      as: "type_info"
+    }
+  },
+  { $unwind: { path: "$type_info", preserveNullAndEmptyArrays: true } },
+  {
+    $group: {
+      _id: {
+        cluster: "$destination.cluster_id",
+        vessel_type: "$type_info.name"
+      },
+      active_vessels: { $addToSet: "$MMSI" },
+      avg_eta: { $avg: "$destination.ETA_hours" },
+      avg_speed: { $avg: "$kinematics.SOG" },
+      dest_lat: { $first: "$destination.dest_lat" },
+      dest_lon: { $first: "$destination.dest_lon" }
+    }
+  },
+  {
+    $addFields: {
+      active_vessel_count: { $size: "$active_vessels" }
+    }
+  },
+  {
+    $lookup: {
+      from: "ports",
+      let: { lat: "$dest_lat", lon: "$dest_lon" },
+      pipeline: [
+        {
+          $geoNear: {
+            near: { type: "Point", coordinates: ["$$lon", "$$lat"] },
+            distanceField: "distance",
+            maxDistance: 100000,
+            spherical: true
+          }
+        },
+        { $limit: 1 },
+        { $project: { name: 1, country: 1 } }
+      ],
+      as: "nearest_port"
+    }
+  },
+  { $unwind: { path: "$nearest_port", preserveNullAndEmptyArrays: true } },
+  {
+    $project: {
+      port_name: "$nearest_port.name",
+      country: "$nearest_port.country",
+      vessel_type: "$_id.vessel_type",
+      active_vessel_count: 1,
+      avg_eta_hours: { $round: ["$avg_eta", 2] },
+      avg_speed_knots: { $round: ["$avg_speed", 2] }
+    }
+  },
+  { $sort: { active_vessel_count: -1 } },
+  { $limit: 15 }
+]).toArray()
