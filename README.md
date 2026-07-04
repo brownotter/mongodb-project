@@ -37,6 +37,11 @@ Upiti za menadžera luke (Anđela):
 5. Koliki je prosečan broj brodova po tipu koji su istovremeno na putu ka istoj luci?
 
 Upiti za analitičara pomorskog saobraćaja (Mirjana): <br><br>
+1. Detekcija navigacionih anomalija u kretanju brodova
+2. Hronološka analiza i profilisanje saobraćaja u vremenskom špicu
+3. Višeslojna statistika navigacionog statusa po tipovima tereta
+4. Analitička GIS geometrija i prostorni stres-test sistema
+5. Predikcija kašnjenja i proračun deficita brzine (ETA analiza)
 
 Detalji implementacija upita pre optimizacije su dostupni u folderu: [queries](./v1/queries). <br>
 Detalji implementacija upita prosle optimizacije su dostupni u folderu: [queries](./v2).
