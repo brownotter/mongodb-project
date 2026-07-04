@@ -67,6 +67,7 @@ db.positions_enriched.createIndex({ "destination.dist_km": 1 });
 db.positions_enriched.createIndex({ "destination.cluster_id": 1 });
 db.positions_enriched.createIndex({ "MMSI": 1 });
 db.positions_enriched.createIndex({"destination.ETA_hours": 1,"kinematics.Speed_Category": 1});
+db.positions_enriched.create_index({"BaseDateTime": 1, "TransceiverClass": 1});
 db.positions_enriched.createIndex({ "position": "2dsphere"});
 ```
-Cilj rekonstrisane šeme je da smanji broj join operacija radi brže agregacije i lakše analize.
+Cilj rekonstrisane šeme je da smanji broj $join operacija radi brže agregacije i lakše analize.
