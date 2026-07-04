@@ -2,7 +2,7 @@
 
 **Tema**  Analiza pomorskog saobraćaja</td>
 
-**Autori:** Anđela Petković IN 55/2021 i Mirjana Todorović IN 57/2021
+Anđela Petković IN 55/2021 i Mirjana Todorović IN 57/2021
 
 
 #### Opis skupa podataka
@@ -16,14 +16,14 @@ Za projekat su korišćena dva skupa podataka:
 
 #### Šeme baze podataka
 
-Za potrebe projekta kreirane su dve šeme baze podataka. Druga šema je kreirana sa ciljem optimizacije upita.
-
-Za upis podataka iz skupa podataka u bazu korištene su python skripte, koje se nalaze u [import_scripts](./import_scripts).<br>
-Takođe, za unos podatka o tipovima brodova je napravljena posebna phython skripta.
-
+Za potrebe projekta kreirane su dve šeme baze podataka. 
+Prva, inicijalna šema je kreirana pomoću podataka iz csv fajlova. <br>
 Inicijalna šema je dostupna [ovde](./v1/README.md). <br>
 
-Druga šema baze podataka kreirana je transformacijom prve šeme uz dodavanje indeksa.<br>
+Za upis podataka iz skupa podataka u bazu korištene su python skripte, koje se nalaze u [import_scripts](./import_scripts).<br>
+Takođe, za unos podatka o tipovima brodova je napravljena posebna phython skripta, koja je takođe u folderu.<br>
+
+Druga šema je kreirana sa ciljem optimizacije upita. Kreirana je transformacijom prve šeme uz dodavanje indeksa.<br>
 Šema je dostupna [ovde](./v2/README.md).
 
 
@@ -38,8 +38,8 @@ Upiti za menadžera luke (Anđela):
 
 Upiti za analitičara pomorskog saobraćaja (Mirjana): <br><br>
 
-Detalji implementacija upita pre optimizacije su dostupni u folderu:[queries](./v1/queries). <br>
-Detalji implementacija upita prosle optimizacije su dostupni u folderu:[queries](./v2).
+Detalji implementacija upita pre optimizacije su dostupni u folderu: [queries](./v1/queries). <br>
+Detalji implementacija upita prosle optimizacije su dostupni u folderu: [queries](./v2).
 
 #### Performanse
 
