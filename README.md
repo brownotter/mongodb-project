@@ -36,7 +36,7 @@ Upiti za menadžera luke (Anđela):
 4. Za svaku luku, koji tipovi brodova najčešće pristaju i koliki je njihov prosečan gaz u odnosu na dubinu kanala luke? 
 5. Koliki je prosečan broj brodova po tipu koji su istovremeno na putu ka istoj luci?
 
-Upiti za analitičara pomorskog saobraćaja (Mirjana): <br><br>
+Upiti za analitičara pomorskog saobraćaja (Mirjana): 
 1. Detekcija navigacionih anomalija u kretanju brodova
 2. Hronološka analiza i profilisanje saobraćaja u vremenskom špicu
 3. Višeslojna statistika navigacionog statusa po tipovima tereta
