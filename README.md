@@ -51,7 +51,7 @@ Detalji implementacija upita prosle optimizacije su dostupni u folderu: [queries
 Procena performansi izvršena je pomoću metode <code>explain("executionStats")</code> u MongoDB. Na graficima je prikazano izmereno vreme izvršavanja upita nad prvom i drugom verzijom baze, kao i broj dokumenata na ulazu u upit.
 
 **Uloga 1**
-![Plot](https://github.com/brownotter/mongodb-project/blob/main/merenje_perfomansi1.png)
-![Plot](https://github.com/brownotter/mongodb-project/blob/main/broj_dokumenata1%20(1).png)
+![Plot](https://github.com/brownotter/mongodb-project/blob/main/dijagram_vreme1.png)
+![Plot](https://github.com/brownotter/mongodb-project/blob/main/documenti_dijagram1.png)
 
 **Uloga 2**
